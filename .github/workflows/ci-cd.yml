@@ -84,11 +84,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set Lowercase Image Name
+        run: |
+          echo "IMAGE_NAME_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Extract Docker Metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}
           tags: |
             type=sha,format=short
             type=raw,value=latest
@@ -98,12 +102,12 @@ jobs:
         with:
           context: .
           load: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:${{ github.sha }}
 
       - name: Run Trivy Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          image-ref: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:${{ github.sha }}"
           format: "table"
           exit-code: "0" # Set to '1' to break the build on critical vulnerabilities
           ignore-unfixed: true
@@ -125,7 +129,7 @@ jobs:
 
           # Update the tag in values.yaml
           sed -i 's/tag: .*/tag: "sha-${{ github.sha }}"/' vote-app/values.yaml
-          sed -i 's|repository: .*|repository: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}'|' vote-app/values.yaml
+          sed -i 's|repository: .*|repository: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}'|' vote-app/values.yaml
 
           git add vote-app/values.yaml
           git commit -m "chore(ci): update image tag to sha-${{ github.sha }} [skip ci]"
