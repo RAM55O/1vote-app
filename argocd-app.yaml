@@ -6,15 +6,15 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git' # Replace with your Git repo URL
+    repoURL: "https://github.com/RAM55O/1vote-app.git" # Replace with your Git repo URL
     targetRevision: HEAD
-    path: vote-app                                                 # Path to your Helm chart directory in Git
+    path: vote-app # Path to your Helm chart directory in Git
     helm:
       valueFiles:
         - values.yaml
   destination:
-    server: 'https://kubernetes.default.svc'
-    namespace: vote-apo-namespace                                  # Target namespace for your app
+    server: "https://kubernetes.default.svc"
+    namespace: vote-apo-namespace # Target namespace for your app
   syncPolicy:
     automated:
       prune: true
