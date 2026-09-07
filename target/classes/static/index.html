@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PollPulse - Real-time Voting & Live Tallies</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background glowing ambient effects -->
+    <div class="glow-sphere glow-1"></div>
+    <div class="glow-sphere glow-2"></div>
+
+    <div class="app-container">
+        <!-- Top Navigation -->
+        <header class="navbar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 20V10"></path>
+                        <path d="M12 20V4"></path>
+                        <path d="M6 20v-6"></path>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <span class="brand-name">PollPulse</span>
+                    <span class="badge-tech">Java • Spring Boot • SSE</span>
+                </div>
+            </div>
+
+            <div class="nav-controls">
+                <div class="status-indicator" id="connection-status" title="Real-Time Server-Sent Events Status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Connecting...</span>
+                </div>
+
+                <div class="poll-select-wrapper">
+                    <label for="poll-dropdown" class="sr-only">Choose Poll</label>
+                    <select id="poll-dropdown" class="custom-select">
+                        <option value="" disabled selected>Loading polls...</option>
+                    </select>
+                </div>
+
+                <button id="btn-open-create-modal" class="btn btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>New Poll</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Poll Content Area -->
+        <main class="main-content">
+            <!-- Loading Skeleton -->
+            <div id="loading-state" class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading real-time poll data...</p>
+            </div>
+
+            <!-- Single Question Card -->
+            <div id="poll-card" class="poll-card hidden">
+                <div class="poll-header">
+                    <div class="poll-meta">
+                        <span class="category-tag">Live Poll</span>
+                        <span class="meta-dot">•</span>
+                        <span id="poll-date" class="poll-date">Active</span>
+                        <span class="meta-dot">•</span>
+                        <span class="atomic-badge" title="Database updates are performed with atomic SQL commands">
+                            ⚡ Atomic DB Updates
+                        </span>
+                    </div>
+
+                    <h1 id="poll-question" class="poll-question">Loading question...</h1>
+
+                    <div class="poll-stats-summary">
+                        <div class="stat-pill">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span id="total-votes-count">0</span>
+                            <span class="stat-label">total votes</span>
+                        </div>
+
+                        <div id="user-voted-badge" class="voted-badge hidden">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span>Vote Recorded</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Options List with Real-time Progress Bars -->
+                <div id="options-container" class="options-list">
+                    <!-- Dynamic option rows will be injected here -->
+                </div>
+
+                <!-- Footer / Action bar -->
+                <div class="poll-footer">
+                    <p class="poll-hint">
+                        <span class="hint-icon">💡</span>
+                        <span>Click an option to cast your vote. Live updates automatically sync across all open tabs.</span>
+                    </p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Create Poll Modal -->
+        <div id="create-modal" class="modal-overlay hidden">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>Create a New Poll</h2>
+                    <button id="btn-close-modal" class="btn-icon" aria-label="Close modal">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="create-poll-form">
+                    <div class="form-group">
+                        <label for="new-question">Poll Question</label>
+                        <input type="text" id="new-question" placeholder="e.g. Which tool do you use for API testing?" required maxlength="500">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Options (minimum 2)</label>
+                        <div id="modal-options-list" class="modal-options-list">
+                            <div class="option-input-row">
+                                <input type="text" class="modal-opt-input" placeholder="Option 1" required maxlength="255">
+                            </div>
+                            <div class="option-input-row">
+                                <input type="text" class="modal-opt-input" placeholder="Option 2" required maxlength="255">
+                            </div>
+                            <div class="option-input-row">
+                                <input type="text" class="modal-opt-input" placeholder="Option 3 (optional)" maxlength="255">
+                                <button type="button" class="btn-remove-opt" title="Remove option">×</button>
+                            </div>
+                        </div>
+
+                        <button type="button" id="btn-add-option" class="btn btn-tertiary">
+                            + Add Another Option
+                        </button>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" id="btn-cancel-modal" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" id="btn-submit-poll" class="btn btn-primary">Publish Poll</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toast-container" class="toast-container"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

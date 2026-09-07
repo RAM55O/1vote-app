@@ -1,0 +1,12 @@
+.git
+.gitignore
+target/
+*.dumpstream
+*.txt
+*.bat
+*.cmd
+README.md
+README.txt
+LICENSE
+NOTICE
+apache-maven-*/
