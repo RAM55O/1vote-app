@@ -30,19 +30,24 @@ jobs:
       - name: Build and Test with Maven
         run: mvn clean verify
 
-      - name: SonarQube Scan
+      - name: SonarCloud / SonarQube Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_ORG: ${{ secrets.SONAR_ORGANIZATION }}
+          REPO_OWNER: ${{ github.repository_owner }}
         run: |
-          if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_HOST_URL" ]; then
-            echo "::warning::SONAR_TOKEN or SONAR_HOST_URL secret is not configured in GitHub repository secrets. Skipping SonarQube scan."
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "::warning::SONAR_TOKEN secret is not configured in GitHub repository secrets. Skipping Sonar scan."
           else
+            HOST="${SONAR_HOST_URL:-https://sonarcloud.io}"
+            ORG="${SONAR_ORG:-$REPO_OWNER}"
             mvn org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar \
-              -Dsonar.host.url="$SONAR_HOST_URL" \
+              -Dsonar.host.url="$HOST" \
               -Dsonar.token="$SONAR_TOKEN" \
-              -Dsonar.projectKey=poll-app \
-              -Dsonar.projectName="poll-app"
+              -Dsonar.organization="$ORG" \
+              -Dsonar.projectKey="${ORG}_1vote-app" \
+              -Dsonar.projectName="1vote-app"
           fi
 
   security-and-publish:

@@ -15,8 +15,10 @@
     <description>Full-stack Real-time Poll and Voting Application</description>
     <properties>
         <java.version>21</java.version>
-        <sonar.projectKey>poll-app</sonar.projectKey>
-        <sonar.projectName>poll-app</sonar.projectName>
+        <sonar.organization>ram55o</sonar.organization>
+        <sonar.projectKey>RAM55O_1vote-app</sonar.projectKey>
+        <sonar.projectName>1vote-app</sonar.projectName>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
     <dependencies>
         <!-- Spring Boot Starter Web -->
