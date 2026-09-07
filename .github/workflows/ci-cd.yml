@@ -35,18 +35,30 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_ORG: ${{ secrets.SONAR_ORGANIZATION }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
           REPO_OWNER: ${{ github.repository_owner }}
         run: |
           if [ -z "$SONAR_TOKEN" ]; then
             echo "::warning::SONAR_TOKEN secret is not configured in GitHub repository secrets. Skipping Sonar scan."
           else
             HOST="${SONAR_HOST_URL:-https://sonarcloud.io}"
-            ORG="${SONAR_ORG:-$REPO_OWNER}"
+            if [ -n "$SONAR_ORG" ]; then
+              ORG="$SONAR_ORG"
+            else
+              ORG=$(echo "$REPO_OWNER" | tr '[:upper:]' '[:lower:]')
+            fi
+
+            if [ -n "$SONAR_PROJECT_KEY" ]; then
+              PKEY="$SONAR_PROJECT_KEY"
+            else
+              PKEY="${ORG}_1vote-app"
+            fi
+
             mvn org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar \
               -Dsonar.host.url="$HOST" \
               -Dsonar.token="$SONAR_TOKEN" \
               -Dsonar.organization="$ORG" \
-              -Dsonar.projectKey="${ORG}_1vote-app" \
+              -Dsonar.projectKey="$PKEY" \
               -Dsonar.projectName="1vote-app"
           fi
 
